@@ -1,0 +1,29 @@
+%%{init: {"theme":"base","themeVariables":{
+  "fontFamily":"Inter, system-ui, sans-serif",
+  "primaryColor":"#E3F2FD",
+  "primaryTextColor":"#0F172A",
+  "primaryBorderColor":"#90CAF9",
+  "lineColor":"#90A4AE"
+},
+"sequence":{"rightAngles":true}}}%%
+sequenceDiagram
+
+  participant U as User
+  participant UI as Bayand UI
+  participant BE as Rust Backend
+  participant AUTH as auth row
+  participant DB as bayand.db
+  participant BK as backups
+
+  U->>UI: Enter password
+  UI->>BE: unlock_tracker(password)
+  BE->>AUTH: Load password salt and wrapped key
+  AUTH-->>BE: Stored auth metadata
+  BE->>BE: Argon2 derive wrapping key
+  BE->>BE: AES-256-GCM unwrap master key
+  BE->>DB: Open encrypted tracker
+  BE->>BK: backup_and_rotate()
+  BE->>BE: Cache unlocked session state
+  BE-->>UI: authState = unlocked
+
+  Note over BE,UI: lock_tracker clears in-memory secrets and returns the app to locked state

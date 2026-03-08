@@ -1,0 +1,66 @@
+direction: right
+
+presentation: {
+  label: "Presentation Layer\n(SolidJS Components)"
+  style.fill: "#0f172a"
+  style.stroke: "#38bdf8"
+
+  app: "App.tsx\n(auth boundary)"
+  auth_ui: "PasswordCreation / PasswordPrompt"
+  main_ui: "MainLayout\nHeader, Sidebar, Calendar,\nRecordPanel, overlays"
+}
+
+state: {
+  label: "State Layer\n(Solid signals)"
+  style.fill: "#312e81"
+
+  auth_state: "auth.ts"
+  records_state: "records.ts"
+  ui_state: "ui.ts"
+  preferences_state: "preferences.ts"
+  session_state: "session.ts"
+}
+
+ipc: {
+  label: "IPC Layer"
+  style.fill: "#052e16"
+
+  bridge: "invoke() / listen()"
+}
+
+backend: {
+  label: "Rust Backend"
+  style.fill: "#1f2937"
+
+  commands: "Commands\nauth, records, navigation,\nstats, export"
+  services: "Services\ncrypto/ db/ backup.rs menu.rs"
+}
+
+data: {
+  label: "Data Layer"
+  style.fill: "#111827"
+
+  db: "bayand.db\nrecords, auth, metadata"
+  backups: "backups/\nlocal rotated copies"
+  prefs: "localStorage\npreferences only"
+  export_file: "JSON export file\non demand"
+}
+
+presentation.app -> presentation.auth_ui
+presentation.app -> presentation.main_ui
+presentation.auth_ui -> state.auth_state
+presentation.main_ui -> state.records_state
+presentation.main_ui -> state.ui_state
+presentation.main_ui -> state.preferences_state
+presentation.main_ui -> state.session_state
+
+state.auth_state -> ipc.bridge
+state.records_state -> ipc.bridge
+state.ui_state -> ipc.bridge
+
+ipc.bridge -> backend.commands
+backend.commands -> backend.services
+backend.services -> data.db
+backend.services -> data.backups
+state.preferences_state -> data.prefs
+backend.commands -> data.export_file: "export_json only"

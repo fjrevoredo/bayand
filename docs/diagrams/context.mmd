@@ -1,0 +1,38 @@
+%%{init: {"theme":"base","themeVariables":{
+  "fontFamily":"Inter, system-ui, sans-serif",
+  "primaryColor":"#E3F2FD",
+  "primaryTextColor":"#0F172A",
+  "primaryBorderColor":"#90CAF9",
+  "lineColor":"#90A4AE",
+  "background":"#FFFFFF"
+}}}%%
+flowchart LR
+
+  classDef actor fill:#F3E8FF,stroke:#7C3AED,stroke-width:2px,color:#111827;
+  classDef app fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#111827;
+  classDef data fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#111827;
+  classDef muted fill:#F3F4F6,stroke:#9CA3AF,stroke-width:2px,color:#4B5563,stroke-dasharray: 6 4;
+
+  USER["<b>User</b><br/>Creates and reviews records"]
+  UI["<b>Bayand</b><br/>SolidJS desktop UI"]
+  STATE["<b>Frontend state</b><br/>auth, records, ui,<br/>preferences, session"]
+  BE["<b>Rust backend</b><br/>commands, crypto, backups"]
+  DB["<b>bayand.db</b><br/>plaintext dates<br/>encrypted payloads"]
+  BACKUPS["<b>backups/</b><br/>rotated local copies"]
+  PREFS["<b>localStorage</b><br/>UI preferences only"]
+  EXPORT["<b>JSON export file</b><br/>user-triggered plaintext output"]
+  NET["<b>Internet</b><br/>unused at runtime"]
+
+  USER --> UI
+  UI --> STATE
+  STATE -->|invoke / listen| BE
+  BE -->|read / write| DB
+  BE -->|rotate| BACKUPS
+  STATE -->|store preferences| PREFS
+  BE -.->|export_json on request| EXPORT
+  BE -.->|no runtime calls| NET
+
+  class USER actor;
+  class UI,STATE,BE app;
+  class DB,BACKUPS,PREFS,EXPORT data;
+  class NET muted;

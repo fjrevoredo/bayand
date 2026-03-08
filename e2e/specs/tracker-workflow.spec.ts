@@ -1,0 +1,108 @@
+/**
+ * E2E test: Core tracker workflow
+ *
+ * Exercises the full app stack (real Tauri binary + real SQLite DB) as a user would:
+ *   create tracker → write a record → lock → unlock → verify persistence
+ *
+ * Prerequisites:
+ *   - `bun run tauri build --` must have been run
+ *   - `tauri-driver` must be installed (`cargo install tauri-driver`)
+ *   - Run via: `bun run test:e2e`
+ */
+
+const TEST_PASSWORD = 'e2e-test-password-123';
+const TEST_TITLE = 'Morning check-in';
+const TEST_BODY = 'Symptoms felt milder by lunch. Energy recovered after rest.';
+
+// Compute dates once (at module load) so values cannot drift if a test run
+// crosses midnight.
+const now = new Date();
+const year = now.getFullYear();
+const month = String(now.getMonth() + 1).padStart(2, '0');
+const TODAY_DATE = `${year}-${month}-${String(now.getDate()).padStart(2, '0')}`;
+const testDay = String(Math.min(now.getDate(), 15)).padStart(2, '0');
+const TEST_DATE = `${year}-${month}-${testDay}`;
+
+describe('Core tracker workflow', () => {
+  it('creates a tracker, writes a record, locks, and verifies persistence after unlock', async () => {
+    // Navigate to the app — session connects before the window finishes loading its URL
+    await browser.url('tauri://localhost');
+
+    // Give WebView2 time to render the UI
+    await browser.pause(5000);
+
+    // 1. Auth screen is either:
+    //    - PasswordCreation (no tracker yet — clean mode always, stateful first run)
+    //    - PasswordPrompt   (tracker exists — stateful mode on second+ run)
+    const authScreen = await browser.waitUntil(
+      async () => {
+        const create = await $('[data-testid="password-create-input"]').isDisplayed().catch(() => false);
+        const unlock = await $('[data-testid="password-unlock-input"]').isDisplayed().catch(() => false);
+        if (create) return 'create' as const;
+        if (unlock) return 'unlock' as const;
+        return false;
+      },
+      { timeout: 10000, timeoutMsg: 'Neither password-create-input nor password-unlock-input appeared' },
+    );
+
+    if (authScreen === 'create') {
+      await $('[data-testid="password-create-input"]').setValue(TEST_PASSWORD);
+      await $('[data-testid="password-repeat-input"]').setValue(TEST_PASSWORD);
+      await $('[data-testid="create-tracker-button"]').click();
+    } else {
+      await $('[data-testid="password-unlock-input"]').setValue(TEST_PASSWORD);
+      await $('[data-testid="unlock-tracker-button"]').click();
+    }
+
+    // 2. Tracker created and unlocked -> MainLayout is now visible.
+    //    Sidebar starts collapsed; open it to access the calendar, then click the target date
+    await $('[data-testid="toggle-sidebar-button"]').waitForClickable({ timeout: 10000 });
+    await $('[data-testid="toggle-sidebar-button"]').click();
+    await $(`[data-testid="calendar-day-${TEST_DATE}"]`).waitForClickable({ timeout: 10000 });
+    await $(`[data-testid="calendar-day-${TEST_DATE}"]`).click();
+
+    // 3. Write the record title.
+    await $('[data-testid="title-input"]').waitForDisplayed({ timeout: 5000 });
+    await $('[data-testid="title-input"]').setValue(TEST_TITLE);
+
+    // 4. Write the record notes in the TipTap ProseMirror contenteditable div.
+    const editor = await $('.ProseMirror');
+    await editor.click();
+    await browser.keys(TEST_BODY);
+
+    // 5. Wait for autosave to flush (debounce is ~1.5 s).
+    await browser.pause(2500);
+
+    // 6. Lock the tracker.
+    await $('[data-testid="lock-tracker-button"]').click();
+
+    // 7. Verify we are now on the unlock screen (tracker locked).
+    await $('[data-testid="password-unlock-input"]').waitForDisplayed({ timeout: 5000 });
+
+    // 8. Unlock again to verify the record was persisted.
+    await $('[data-testid="password-unlock-input"]').setValue(TEST_PASSWORD);
+    await $('[data-testid="unlock-tracker-button"]').click();
+
+    // 9. Verify a fresh session baseline: unlock should select today.
+    //     Sidebar starts collapsed after unlock; open it to access the calendar.
+    await $('[data-testid="toggle-sidebar-button"]').waitForClickable({ timeout: 10000 });
+    await $('[data-testid="toggle-sidebar-button"]').click();
+    const todayButton = await $(`[data-testid="calendar-day-${TODAY_DATE}"]`);
+    await todayButton.waitForDisplayed({ timeout: 10000 });
+    const todayButtonClass = await todayButton.getAttribute('class');
+    expect(todayButtonClass).toContain('bg-blue-600');
+
+    // 10. Navigate back to the saved date and verify persistence.
+    if (TEST_DATE !== TODAY_DATE) {
+      await $(`[data-testid="calendar-day-${TEST_DATE}"]`).waitForClickable({ timeout: 10000 });
+      await $(`[data-testid="calendar-day-${TEST_DATE}"]`).click();
+    }
+
+    // Wait for the record to load from the DB (async) before asserting the title.
+    // waitForDisplayed only checks element visibility, not value readiness.
+    await browser.waitUntil(
+      async () => (await $('[data-testid="title-input"]').getValue()) === TEST_TITLE,
+      { timeout: 10000, timeoutMsg: `Title did not load "${TEST_TITLE}" within 10s` },
+    );
+  });
+});

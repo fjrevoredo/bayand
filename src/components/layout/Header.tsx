@@ -1,0 +1,71 @@
+import { createSignal, Show } from 'solid-js';
+import { Menu, Lock, Info } from 'lucide-solid';
+import { selectedDate, setIsAboutOpen } from '../../state/ui';
+import { lockTracker } from '../../state/auth';
+
+interface HeaderProps {
+  onMenuClick?: () => void;
+  showMenu?: boolean;
+}
+
+export default function Header(props: HeaderProps) {
+  const [isLocking, setIsLocking] = createSignal(false);
+
+  const formattedDate = () =>
+    new Date(selectedDate() + 'T00:00:00').toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+  const handleLock = async () => {
+    if (isLocking()) return;
+    setIsLocking(true);
+    try {
+      await lockTracker();
+    } finally {
+      setIsLocking(false);
+    }
+  };
+
+  return (
+    <header class="flex h-16 items-center justify-between border-b border-primary bg-primary px-4">
+      <div class="flex items-center gap-3">
+        <Show when={props.showMenu}>
+          <button
+            onClick={() => props.onMenuClick?.()}
+            class="rounded p-2 text-primary hover:bg-hover lg:hidden"
+            aria-label="Toggle menu"
+            data-testid="toggle-sidebar-button"
+          >
+            <Menu size={24} />
+          </button>
+        </Show>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-tertiary">Health Records</p>
+          <h1 class="text-lg font-semibold text-primary">{formattedDate()}</h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <button
+          onClick={() => setIsAboutOpen(true)}
+          class="rounded p-2 text-tertiary transition-colors hover:bg-hover"
+          aria-label="About"
+        >
+          <Info size={20} />
+        </button>
+        <button
+          onClick={() => void handleLock()}
+          disabled={isLocking()}
+          class="rounded p-2 text-tertiary transition-colors hover:bg-hover disabled:opacity-50"
+          aria-label="Lock tracker"
+          data-testid="lock-tracker-button"
+        >
+          <Lock size={20} />
+        </button>
+      </div>
+    </header>
+  );
+}

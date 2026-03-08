@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="460" viewBox="0 0 1100 460" role="img" aria-labelledby="title desc">
+  <title id="title">Bayand system context dark</title>
+  <desc id="desc">Local-only flow between the user, Bayand UI, backend, encrypted database, local backups, preferences, and optional JSON export.</desc>
+  <rect width="1100" height="460" fill="#0f172a"/>
+  <style>
+    text { font-family: "IBM Plex Sans", sans-serif; fill: #e5e7eb; font-size: 20px; }
+    .small { font-size: 16px; }
+    .box { rx: 16; ry: 16; stroke-width: 3; }
+    .actor { fill: #111827; stroke: #a855f7; }
+    .app { fill: #0b1220; stroke: #38bdf8; }
+    .data { fill: #1f2937; stroke: #f59e0b; }
+    .muted { fill: #111827; stroke: #64748b; stroke-dasharray: 8 6; }
+    .line { stroke: #94a3b8; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    .dashed { stroke-dasharray: 8 6; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect class="box actor" x="40" y="150" width="170" height="90"/>
+  <text x="125" y="186" text-anchor="middle">User</text>
+  <text class="small" x="125" y="214" text-anchor="middle">creates and reviews</text>
+  <text class="small" x="125" y="236" text-anchor="middle">health records</text>
+  <rect class="box app" x="260" y="150" width="190" height="90"/>
+  <text x="355" y="186" text-anchor="middle">Bayand UI</text>
+  <text class="small" x="355" y="214" text-anchor="middle">SolidJS desktop app</text>
+  <rect class="box app" x="500" y="135" width="200" height="120"/>
+  <text x="600" y="176" text-anchor="middle">Frontend state</text>
+  <text class="small" x="600" y="204" text-anchor="middle">auth, records, ui,</text>
+  <text class="small" x="600" y="226" text-anchor="middle">preferences, session</text>
+  <rect class="box app" x="760" y="135" width="220" height="120"/>
+  <text x="870" y="176" text-anchor="middle">Rust backend</text>
+  <text class="small" x="870" y="204" text-anchor="middle">commands, crypto,</text>
+  <text class="small" x="870" y="226" text-anchor="middle">backups, export</text>
+  <rect class="box data" x="760" y="300" width="160" height="100"/>
+  <text x="840" y="338" text-anchor="middle">bayand.db</text>
+  <text class="small" x="840" y="366" text-anchor="middle">date plaintext</text>
+  <text class="small" x="840" y="388" text-anchor="middle">payload encrypted</text>
+  <rect class="box data" x="940" y="300" width="120" height="100"/>
+  <text x="1000" y="345" text-anchor="middle">backups</text>
+  <text class="small" x="1000" y="373" text-anchor="middle">local only</text>
+  <rect class="box data" x="500" y="300" width="180" height="100"/>
+  <text x="590" y="338" text-anchor="middle">localStorage</text>
+  <text class="small" x="590" y="366" text-anchor="middle">preferences only</text>
+  <rect class="box data" x="280" y="300" width="170" height="100"/>
+  <text x="365" y="338" text-anchor="middle">JSON export</text>
+  <text class="small" x="365" y="366" text-anchor="middle">user-triggered</text>
+  <text class="small" x="365" y="388" text-anchor="middle">plaintext output</text>
+  <rect class="box muted" x="930" y="30" width="130" height="70"/>
+  <text x="995" y="62" text-anchor="middle">Internet</text>
+  <text class="small" x="995" y="86" text-anchor="middle">unused at runtime</text>
+  <path class="line" d="M 210 195 L 260 195"/>
+  <path class="line" d="M 450 195 L 500 195"/>
+  <path class="line" d="M 700 195 L 760 195"/>
+  <path class="line" d="M 870 255 L 840 300"/>
+  <path class="line" d="M 940 255 L 990 300"/>
+  <path class="line" d="M 590 255 L 590 300"/>
+  <path class="line dashed" d="M 760 195 L 450 320"/>
+  <path class="line dashed" d="M 980 135 L 980 100"/>
+</svg>

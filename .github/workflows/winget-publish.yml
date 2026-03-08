@@ -1,0 +1,94 @@
+name: Publish to WinGet
+
+permissions:
+  contents: read
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v0.4.6)'
+        required: true
+
+jobs:
+  publish-winget:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify WINGET_TOKEN secret is set
+        shell: pwsh
+        run: |
+          if (-not "${{ secrets.WINGET_TOKEN }}") {
+            Write-Error "WINGET_TOKEN secret is not set. Add it at Settings → Secrets and variables → Actions."
+            exit 1
+          }
+          Write-Host "WINGET_TOKEN is configured."
+
+      - name: Determine version and asset
+        id: prep
+        shell: pwsh
+        run: |
+          # Extract tag: use manual input if triggered via workflow_dispatch, else the release tag
+          $tag = if ("${{ inputs.tag }}") { "${{ inputs.tag }}" } else { "${{ github.ref_name }}" }
+          # Strip 'v' prefix to get version (0.4.6)
+          $version = $tag -replace '^v', ''
+
+          # Construct asset name
+          $assetName = "Bayand-$version-windows.exe"
+
+          # Construct download URL
+          $url = "https://github.com/fjrevoredo/bayand/releases/download/$tag/$assetName"
+
+          # Set outputs
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "asset_name=$assetName" >> $env:GITHUB_OUTPUT
+          echo "url=$url" >> $env:GITHUB_OUTPUT
+
+      - name: Verify release asset exists
+        shell: pwsh
+        run: |
+          $tag = if ("${{ inputs.tag }}") { "${{ inputs.tag }}" } else { "${{ github.ref_name }}" }
+          $assetName = "${{ steps.prep.outputs.asset_name }}"
+
+          # Use gh CLI to check if asset exists
+          gh release view "$tag" --json assets --jq '.assets[].name' --repo "fjrevoredo/bayand" | Select-String -Pattern "$assetName" -Quiet
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Asset $assetName not found in release $tag"
+            exit 1
+          }
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Download wingetcreate tool
+        shell: pwsh
+        run: |
+          iwr https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+          if (-not (Test-Path wingetcreate.exe)) {
+            Write-Error "Failed to download wingetcreate.exe"
+            exit 1
+          }
+
+      - name: Submit WinGet manifest
+        shell: pwsh
+        env:
+          WINGET_CREATE_GITHUB_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          $version = "${{ steps.prep.outputs.version }}"
+          $url = "${{ steps.prep.outputs.url }}"
+
+          # Submit manifest to WinGet repo
+          .\wingetcreate.exe update fjrevoredo.Bayand `
+            --version $version `
+            --urls "$url|x64" `
+            --token $env:WINGET_CREATE_GITHUB_TOKEN `
+            --submit
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "wingetcreate failed with exit code $LASTEXITCODE"
+            exit 1
+          }

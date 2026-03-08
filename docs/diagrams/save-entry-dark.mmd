@@ -1,0 +1,39 @@
+%%{init: {"theme":"base","themeVariables":{
+  "fontFamily":"Inter, system-ui, sans-serif",
+  "primaryColor":"#1E293B",
+  "primaryTextColor":"#E2E8F0",
+  "primaryBorderColor":"#334155",
+  "lineColor":"#64748B",
+  "background":"#0F172A"
+}}}%%
+flowchart TB
+
+  classDef ui fill:#0F172A,stroke:#38BDF8,stroke-width:2px,color:#E5E7EB;
+  classDef backend fill:#052E16,stroke:#22C55E,stroke-width:2px,color:#E5E7EB;
+  classDef data fill:#1F2937,stroke:#F59E0B,stroke-width:2px,color:#E5E7EB;
+  classDef decision fill:#3F3F1A,stroke:#FACC15,stroke-width:2px,color:#E5E7EB;
+
+  DATE["Selected date"]
+  LOAD["get_records_for_date(date)"]
+  PANEL["RecordPanel state<br/>current record, day list,<br/>debounced draft values"]
+  EDIT["Edit symptoms, medications,<br/>vitals, sleep, wellbeing, notes"]
+  HAVEID{"Record id<br/>already exists?"}
+  CREATE["create_record(date)"]
+  SAVE["save_record(id, payload)"]
+  EMPTY{"Delete requested and<br/>payload is empty?"}
+  DELETE["delete_record_if_empty(id, payload)"]
+  ENC["Encrypt payload JSON<br/>with unlocked master key"]
+  DB1["records table<br/>date plaintext<br/>payload encrypted"]
+  DATES["get_all_record_dates()<br/>refresh calendar indicators"]
+
+  DATE --> LOAD --> PANEL --> EDIT --> HAVEID
+  HAVEID -- No --> CREATE --> SAVE
+  HAVEID -- Yes --> SAVE
+  SAVE --> EMPTY
+  EMPTY -- Yes --> DELETE --> DATES
+  EMPTY -- No --> ENC --> DB1 --> DATES
+
+  class DATE,LOAD,PANEL,EDIT,DATES ui;
+  class CREATE,SAVE,DELETE,ENC backend;
+  class DB1 data;
+  class HAVEID,EMPTY decision;

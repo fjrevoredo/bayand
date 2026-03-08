@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Bayand layered architecture</title>
+  <desc id="desc">Presentation, state, IPC, backend, and data layers for the Bayand desktop app.</desc>
+  <rect width="1200" height="520" fill="#ffffff"/>
+  <style>
+    text { font-family: "IBM Plex Sans", sans-serif; fill: #111827; font-size: 20px; }
+    .small { font-size: 16px; }
+    .layer { rx: 18; ry: 18; stroke-width: 3; }
+    .presentation { fill: #e0f2fe; stroke: #0284c7; }
+    .state { fill: #ede9fe; stroke: #7c3aed; }
+    .ipc { fill: #dcfce7; stroke: #16a34a; }
+    .backend { fill: #fef3c7; stroke: #d97706; }
+    .data { fill: #f8fafc; stroke: #64748b; }
+    .line { stroke: #64748b; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect class="layer presentation" x="40" y="50" width="1120" height="90"/>
+  <text x="600" y="84" text-anchor="middle">Presentation Layer</text>
+  <text class="small" x="600" y="112" text-anchor="middle">App.tsx, auth screens, MainLayout, Header, Sidebar, Calendar, RecordPanel, overlays</text>
+  <rect class="layer state" x="40" y="170" width="1120" height="90"/>
+  <text x="600" y="204" text-anchor="middle">State Layer</text>
+  <text class="small" x="600" y="232" text-anchor="middle">auth.ts, records.ts, ui.ts, preferences.ts, session.ts</text>
+  <rect class="layer ipc" x="40" y="290" width="1120" height="70"/>
+  <text x="600" y="333" text-anchor="middle">IPC Layer: invoke() / listen()</text>
+  <rect class="layer backend" x="40" y="390" width="730" height="90"/>
+  <text x="405" y="424" text-anchor="middle">Rust Backend</text>
+  <text class="small" x="405" y="452" text-anchor="middle">commands: auth, records, navigation, stats, export</text>
+  <rect class="layer data" x="810" y="390" width="350" height="90"/>
+  <text x="985" y="424" text-anchor="middle">Data Layer</text>
+  <text class="small" x="985" y="452" text-anchor="middle">bayand.db, backups, localStorage, JSON export file</text>
+  <path class="line" d="M 600 140 L 600 170"/>
+  <path class="line" d="M 600 260 L 600 290"/>
+  <path class="line" d="M 600 360 L 600 390"/>
+  <path class="line" d="M 770 435 L 810 435"/>
+</svg>
